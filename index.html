@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 模型价格雷达 — 一页看清所有AI模型价格</title>
+<title>AI 模型价格雷达 — 2026年最新版</title>
 <style>
 :root {
   --bg: #0d1117;
@@ -44,6 +44,21 @@ header {
 header h1 { font-size: 2em; margin-bottom: 8px; }
 header h1 span { color: var(--accent); }
 header p { color: var(--text-secondary); font-size: 1.1em; }
+.header-meta {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.header-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85em;
+  background: rgba(88,166,255,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(88,166,255,0.3);
+}
 .badge {
   display: inline-block;
   padding: 2px 8px;
@@ -53,8 +68,9 @@ header p { color: var(--text-secondary); font-size: 1.1em; }
 }
 .badge-provider { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
 .badge-feature { background: rgba(88,166,255,0.15); color: var(--accent); }
-.badge-cheap { background: rgba(63,185,80,0.15); color: var(--green); }
-.badge-new { background: rgba(188,140,255,0.15); color: var(--purple); }
+.badge-new { background: rgba(63,185,80,0.15); color: var(--green); }
+.badge-reasoning { background: rgba(188,140,255,0.15); color: var(--purple); }
+.badge-vision { background: rgba(247,120,186,0.15); color: var(--pink); }
 
 /* 筛选栏 */
 .filters {
@@ -205,41 +221,6 @@ tr:hover { background: rgba(88,166,255,0.04); }
 .scenario-name { font-weight: 600; margin-bottom: 4px; }
 .scenario-desc { color: var(--text-muted); font-size: 0.85em; }
 
-/* 对比模式 */
-.compare-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border);
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 100;
-  transform: translateY(100%);
-  transition: transform 0.3s;
-}
-.compare-bar.visible { transform: translateY(0); }
-.compare-models { display: flex; gap: 12px; align-items: center; }
-.compare-tag {
-  background: rgba(88,166,255,0.15);
-  color: var(--accent);
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 0.9em;
-}
-.compare-btn {
-  padding: 8px 20px;
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 600;
-}
-
 /* 底部 */
 footer {
   text-align: center;
@@ -270,6 +251,11 @@ footer a:hover { text-decoration: underline; }
   <header>
     <h1>📡 <span>AI 模型价格雷达</span></h1>
     <p>一页看清所有AI模型价格 · 输入用量即算月费 · 选最划算的模型</p>
+    <div class="header-meta">
+      <span class="header-badge">🔥 2026年6月最新</span>
+      <span class="header-badge">📊 30+ 模型</span>
+      <span class="header-badge">🏭 8 家厂商</span>
+    </div>
   </header>
 
   <!-- 筛选栏 -->
@@ -284,6 +270,7 @@ footer a:hover { text-decoration: underline; }
       <option value="contextWindow">按上下文窗口排序</option>
       <option value="name">按名称排序</option>
       <option value="provider">按厂商排序</option>
+      <option value="released">按发布时间排序</option>
     </select>
   </div>
 
@@ -344,34 +331,51 @@ footer a:hover { text-decoration: underline; }
 </div>
 
 <script>
-// ============ 模型数据 ============
+// ============ 2026年6月最新模型数据 ============
 const MODELS = [
-  // OpenAI
-  { id:"gpt-4o", name:"GPT-4o", provider:"OpenAI", inputPrice:2.5, outputPrice:10, contextWindow:128000, features:["vision","tools","json"], category:["general","code","vision"], released:"2024-05", notes:"旗舰模型，综合能力最强" },
-  { id:"gpt-4o-mini", name:"GPT-4o mini", provider:"OpenAI", inputPrice:0.15, outputPrice:0.6, contextWindow:128000, features:["vision","tools","json"], category:["general","code","vision","cheap"], released:"2024-07", notes:"轻量旗舰，性价比极高" },
-  { id:"gpt-4.1", name:"GPT-4.1", provider:"OpenAI", inputPrice:2, outputPrice:8, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","long"], released:"2025-04", notes:"百万上下文，代码能力提升" },
-  { id:"gpt-4.1-mini", name:"GPT-4.1 mini", provider:"OpenAI", inputPrice:0.4, outputPrice:1.6, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","long","cheap"], released:"2025-04", notes:"4.1轻量版，百万上下文" },
-  { id:"o3", name:"o3", provider:"OpenAI", inputPrice:10, outputPrice:40, contextWindow:200000, features:["reasoning","tools"], category:["reasoning","code"], released:"2025-04", notes:"强推理模型，数学/编程顶级" },
-  { id:"o4-mini", name:"o4-mini", provider:"OpenAI", inputPrice:1.1, outputPrice:4.4, contextWindow:200000, features:["reasoning","tools"], category:["reasoning","code","cheap"], released:"2025-04", notes:"轻量推理模型，性价比推理" },
-  // Anthropic
-  { id:"claude-sonnet-4", name:"Claude Sonnet 4", provider:"Anthropic", inputPrice:3, outputPrice:15, contextWindow:200000, features:["vision","tools","json"], category:["general","code","long"], released:"2025-05", notes:"最新旗舰，代码能力顶尖" },
-  { id:"claude-haiku-3.5", name:"Claude 3.5 Haiku", provider:"Anthropic", inputPrice:0.8, outputPrice:4, contextWindow:200000, features:["vision","tools"], category:["general","code","cheap"], released:"2024-11", notes:"快速轻量，日常对话首选" },
-  { id:"claude-opus-4", name:"Claude Opus 4", provider:"Anthropic", inputPrice:15, outputPrice:75, contextWindow:200000, features:["vision","tools","json"], category:["reasoning","code"], released:"2025-06", notes:"最强推理，复杂任务专用" },
-  // Google
-  { id:"gemini-2.5-pro", name:"Gemini 2.5 Pro", provider:"Google", inputPrice:1.25, outputPrice:10, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","vision","long"], released:"2025-03", notes:"百万上下文，多模态强" },
-  { id:"gemini-2.5-flash", name:"Gemini 2.5 Flash", provider:"Google", inputPrice:0.15, outputPrice:0.6, contextWindow:1048576, features:["vision","tools"], category:["general","code","vision","long","cheap"], released:"2025-03", notes:"超快超便宜，百万上下文" },
-  // DeepSeek
-  { id:"deepseek-v3", name:"DeepSeek V3", provider:"DeepSeek", inputPrice:0.27, outputPrice:1.1, contextWindow:128000, features:["tools","json"], category:["general","code","cheap"], released:"2024-12", notes:"国产之王，性价比碾压" },
-  { id:"deepseek-r1", name:"DeepSeek R1", provider:"DeepSeek", inputPrice:0.55, outputPrice:2.19, contextWindow:128000, features:["reasoning"], category:["reasoning","code","cheap"], released:"2025-01", notes:"开源推理模型，价格杀手" },
-  // 阿里
-  { id:"qwen3-235b", name:"Qwen3 235B", provider:"阿里", inputPrice:0.4, outputPrice:1.6, contextWindow:131072, features:["tools","json"], category:["general","code","cheap"], released:"2025-04", notes:"开源旗舰，中文能力一流" },
-  { id:"qwen3-32b", name:"Qwen3 32B", provider:"阿里", inputPrice:0.1, outputPrice:0.4, contextWindow:131072, features:["tools"], category:["general","code","cheap"], released:"2025-04", notes:"轻量开源，极致性价比" },
-  // Mistral
-  { id:"mistral-large", name:"Mistral Large", provider:"Mistral", inputPrice:2, outputPrice:6, contextWindow:128000, features:["tools","json"], category:["general","code"], released:"2024-11", notes:"欧洲最强，多语言优秀" },
-  { id:"mistral-small", name:"Mistral Small", provider:"Mistral", inputPrice:0.1, outputPrice:0.3, contextWindow:128000, features:["tools"], category:["general","code","cheap"], released:"2025-01", notes:"轻量快速，价格极低" },
-  // Meta (通过API提供商)
-  { id:"llama-4-maverick", name:"Llama 4 Maverick", provider:"Meta", inputPrice:0.2, outputPrice:0.6, contextWindow:1048576, features:["vision","tools"], category:["general","code","vision","long","cheap"], released:"2025-04", notes:"开源多模态，百万上下文" },
-  { id:"llama-4-scout", name:"Llama 4 Scout", provider:"Meta", inputPrice:0.1, outputPrice:0.3, contextWindow:524288, features:["vision"], category:["general","vision","cheap"], released:"2025-04", notes:"超轻量开源，快速推理" },
+  // ===== OpenAI (GPT-5 系列) =====
+  { id:"gpt-5.5", name:"GPT-5.5", provider:"OpenAI", inputPrice:5.0, outputPrice:30.0, contextWindow:256000, features:["vision","tools","json","reasoning"], category:["general","code","reasoning"], released:"2026-04", notes:"最新旗舰，代号Spud，推理能力顶级" },
+  { id:"gpt-5.5-pro", name:"GPT-5.5 Pro", provider:"OpenAI", inputPrice:30.0, outputPrice:180.0, contextWindow:256000, features:["vision","tools","json","reasoning"], category:["reasoning","code"], released:"2026-04", notes:"Pro版，最强推理，付费专属" },
+  { id:"gpt-5.4", name:"GPT-5.4", provider:"OpenAI", inputPrice:2.5, outputPrice:15.0, contextWindow:256000, features:["vision","tools","json"], category:["general","code","vision"], released:"2026-Q1", notes:"性价比旗舰，综合能力强" },
+  { id:"gpt-5.4-mini", name:"GPT-5.4 mini", provider:"OpenAI", inputPrice:0.75, outputPrice:4.5, contextWindow:256000, features:["vision","tools","json"], category:["general","code","cheap"], released:"2026-Q1", notes:"轻量版，日常任务首选" },
+  { id:"gpt-5.4-nano", name:"GPT-5.4 nano", provider:"OpenAI", inputPrice:0.20, outputPrice:1.25, contextWindow:128000, features:["tools"], category:["general","cheap"], released:"2026-Q1", notes:"超轻量，价格杀手" },
+  { id:"gpt-5.3-codex", name:"GPT-5.3 Codex", provider:"OpenAI", inputPrice:1.75, outputPrice:14.0, contextWindow:256000, features:["tools","json"], category:["code"], released:"2025-Q4", notes:"代码专用，多文件编辑" },
+
+  // ===== Anthropic (Claude Opus 4.x 系列) =====
+  { id:"opus-4.8", name:"Claude Opus 4.8", provider:"Anthropic", inputPrice:5.0, outputPrice:25.0, contextWindow:200000, features:["vision","tools","json","reasoning"], category:["reasoning","code","general"], released:"2026-05-28", notes:"🧠 最新最强，Agent和编码顶级" },
+  { id:"sonnet-4.6", name:"Claude Sonnet 4.6", provider:"Anthropic", inputPrice:3.0, outputPrice:15.0, contextWindow:200000, features:["vision","tools","json"], category:["general","code","vision"], released:"2026-02", notes:"平衡之选，智能/成本/速度最优" },
+  { id:"haiku-4.5", name:"Claude Haiku 4.5", provider:"Anthropic", inputPrice:1.0, outputPrice:5.0, contextWindow:200000, features:["vision","tools"], category:["general","code","cheap"], released:"2025-10", notes:"最快最便宜，日常对话首选" },
+  { id:"opus-4.7", name:"Claude Opus 4.7", provider:"Anthropic", inputPrice:5.0, outputPrice:25.0, contextWindow:200000, features:["vision","tools","json","reasoning"], category:["reasoning","code"], released:"2026-Q1", notes:"上一代旗舰，仍然很强" },
+  { id:"opus-4.6", name:"Claude Opus 4.6", provider:"Anthropic", inputPrice:5.0, outputPrice:25.0, contextWindow:200000, features:["vision","tools","json","reasoning"], category:["reasoning","code"], released:"2025-Q4", notes:"经典推理模型" },
+  { id:"opus-4.5", name:"Claude Opus 4.5", provider:"Anthropic", inputPrice:5.0, outputPrice:25.0, contextWindow:200000, features:["vision","tools","json","reasoning"], category:["reasoning","code"], released:"2025-Q3", notes:"早期Opus 4系列" },
+
+  // ===== Google (Gemini 3.x 系列) =====
+  { id:"gemini-3.5-flash", name:"Gemini 3.5 Flash", provider:"Google", inputPrice:1.5, outputPrice:9.0, contextWindow:1048576, features:["vision","tools","json","reasoning"], category:["general","code","vision","long","cheap"], released:"2026-05-19", notes:"🔥 最新速度王，百万上下文" },
+  { id:"gemini-3-pro", name:"Gemini 3 Pro", provider:"Google", inputPrice:2.0, outputPrice:12.0, contextWindow:2097152, features:["vision","tools","json","reasoning"], category:["general","code","vision","long","reasoning"], released:"2025-11", notes:"200万上下文，多模态最强" },
+  { id:"gemini-3.1-flash-lite", name:"Gemini 3.1 Flash-Lite", provider:"Google", inputPrice:0.25, outputPrice:1.5, contextWindow:1048576, features:["vision","tools"], category:["general","cheap","long"], released:"2026-03", notes:"极致性价比，百万上下文" },
+  { id:"gemini-3-flash", name:"Gemini 3 Flash", provider:"Google", inputPrice:0.5, outputPrice:3.0, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","vision","long","cheap"], released:"2025-12", notes:"均衡之选，百万上下文" },
+  { id:"gemini-2.5-pro", name:"Gemini 2.5 Pro", provider:"Google", inputPrice:1.25, outputPrice:10.0, contextWindow:1048576, features:["vision","tools","json","reasoning"], category:["general","code","vision","long"], released:"2025-03", notes:"经典旗舰，仍然可用" },
+  { id:"gemini-2.5-flash", name:"Gemini 2.5 Flash", provider:"Google", inputPrice:0.3, outputPrice:2.5, contextWindow:1048576, features:["vision","tools"], category:["general","code","long","cheap"], released:"2025-03", notes:"混合推理，快速便宜" },
+  { id:"gemini-2.5-flash-lite", name:"Gemini 2.5 Flash-Lite", provider:"Google", inputPrice:0.1, outputPrice:0.4, contextWindow:1048576, features:["tools"], category:["general","cheap","long"], released:"2025-Q2", notes:"💰 全场最便宜之一" },
+
+  // ===== DeepSeek (V4 系列) =====
+  { id:"deepseek-v4-pro", name:"DeepSeek V4 Pro", provider:"DeepSeek", inputPrice:0.435, outputPrice:0.87, contextWindow:1000000, features:["tools","json","reasoning"], category:["general","code","long","cheap","reasoning"], released:"2026-04-24", notes:"🔥 1.6万亿参数，百万上下文" },
+  { id:"deepseek-v4-flash", name:"DeepSeek V4 Flash", provider:"DeepSeek", inputPrice:0.14, outputPrice:0.28, contextWindow:1000000, features:["tools","json"], category:["general","code","long","cheap"], released:"2026-04-24", notes:"💰 全场最便宜！284B参数" },
+
+  // ===== 阿里 (Qwen 3.7 系列) =====
+  { id:"qwen3.7-max", name:"Qwen3.7 Max", provider:"阿里", inputPrice:0.5, outputPrice:2.0, contextWindow:1000000, features:["tools","json","vision"], category:["general","code","vision","long"], released:"2026-05-18", notes:"🔥 最新旗舰，原生多模态" },
+  { id:"qwen3.7-plus", name:"Qwen3.7 Plus", provider:"阿里", inputPrice:0.3, outputPrice:1.2, contextWindow:1000000, features:["tools","json"], category:["general","code","long","cheap"], released:"2026-05-18", notes:"均衡版，中文能力一流" },
+  { id:"qwen3.6-plus", name:"Qwen3.6 Plus", provider:"阿里", inputPrice:0.25, outputPrice:1.0, contextWindow:1000000, features:["tools","json"], category:["general","code","long","cheap"], released:"2026-04", notes:"上一代，仍然很能打" },
+
+  // ===== Mistral =====
+  { id:"mistral-large-3", name:"Mistral Large 3", provider:"Mistral", inputPrice:2.0, outputPrice:6.0, contextWindow:128000, features:["tools","json"], category:["general","code"], released:"2025-Q4", notes:"欧洲最强，多语言优秀" },
+  { id:"mistral-medium-3.5", name:"Mistral Medium 3.5", provider:"Mistral", inputPrice:0.8, outputPrice:2.4, contextWindow:128000, features:["tools","json"], category:["general","code","cheap"], released:"2026-Q1", notes:"中端均衡，性价比高" },
+  { id:"mistral-small-4", name:"Mistral Small 4", provider:"Mistral", inputPrice:0.1, outputPrice:0.3, contextWindow:128000, features:["tools"], category:["general","code","cheap"], released:"2026-Q1", notes:"💰 极致便宜，轻量快速" },
+
+  // ===== Meta =====
+  { id:"llama-4-maverick", name:"Llama 4 Maverick", provider:"Meta", inputPrice:0.2, outputPrice:0.6, contextWindow:1048576, features:["vision","tools"], category:["general","code","vision","long","cheap"], released:"2025-04", notes:"开源多模态，128专家" },
+  { id:"llama-4-scout", name:"Llama 4 Scout", provider:"Meta", inputPrice:0.1, outputPrice:0.3, contextWindow:10000000, features:["vision"], category:["general","vision","long","cheap"], released:"2025-04", notes:"🚀 1000万上下文！16专家" },
+  { id:"muse-spark", name:"Muse Spark", provider:"Meta", inputPrice:0.3, outputPrice:1.2, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","vision"], released:"2026-04", notes:"Meta最新，替代Llama" },
 ];
 
 // ============ 场景数据 ============
@@ -392,17 +396,18 @@ let state = {
   starred: JSON.parse(localStorage.getItem("starred") || "[]"),
   inputTokens: 500000,
   outputTokens: 200000,
-  compareList: [],
 };
 
 // ============ 工具函数 ============
 function fmt(n) {
+  if (n >= 10000000) return (n/1000000).toFixed(0)+"M";
   if (n >= 1000000) return (n/1000000).toFixed(1)+"M";
   if (n >= 1000) return (n/1000).toFixed(0)+"K";
   return n.toString();
 }
 function fmtPrice(n) {
-  if (n < 0.01) return "$"+n.toFixed(3);
+  if (n < 0.01) return "$"+n.toFixed(4);
+  if (n < 0.1) return "$"+n.toFixed(3);
   if (n < 1) return "$"+n.toFixed(2);
   if (n < 100) return "$"+n.toFixed(1);
   return "$"+n.toFixed(0);
@@ -448,7 +453,7 @@ function renderTable() {
   const s = state.sort;
   const d = state.sortDir;
   models.sort((a,b) => {
-    if (s === "name" || s === "provider") return d * a[s].localeCompare(b[s]);
+    if (s === "name" || s === "provider" || s === "released") return d * String(a[s]).localeCompare(String(b[s]));
     return d * (a[s] - b[s]);
   });
   // 渲染
@@ -489,7 +494,6 @@ function renderTable() {
 function renderCalc() {
   const inTok = state.inputTokens;
   const outTok = state.outputTokens;
-  // 计算所有模型月费
   const costs = MODELS.map(m => ({
     ...m,
     monthly: monthlyCost(m, inTok, outTok),
@@ -524,17 +528,14 @@ function renderScenarios() {
     card.addEventListener("click", () => {
       const sc = SCENARIOS.find(s=>s.id===card.dataset.id);
       if (!sc) return;
-      // 更新滑块
       state.inputTokens = sc.inputTokens;
       state.outputTokens = sc.outputTokens;
       document.getElementById("input-tokens").value = sc.inputTokens;
       document.getElementById("output-tokens").value = sc.outputTokens;
       document.getElementById("input-tokens-num").value = fmt(sc.inputTokens);
       document.getElementById("output-tokens-num").value = fmt(sc.outputTokens);
-      // 高亮
       grid.querySelectorAll(".scenario-card").forEach(c=>c.classList.remove("active"));
       card.classList.add("active");
-      // 显示推荐
       const costs = MODELS.map(m => ({...m, monthly: monthlyCost(m, sc.inputTokens, sc.outputTokens)}))
         .sort((a,b)=>a.monthly-b.monthly);
       const cheapest = costs[0];
@@ -562,7 +563,6 @@ function render() {
 
 // ============ 事件绑定 ============
 function init() {
-  // 滑块
   const inSlider = document.getElementById("input-tokens");
   const outSlider = document.getElementById("output-tokens");
   const inNum = document.getElementById("input-tokens-num");
@@ -585,7 +585,6 @@ function init() {
     const v = parseInt(outNum.value.replace(/[KMkm]/g, "")) * (outNum.value.toUpperCase().includes("M")?1000000:outNum.value.toUpperCase().includes("K")?1000:1);
     if (!isNaN(v)) { state.outputTokens = v; outSlider.value = v; renderCalc(); }
   });
-  // 排序
   document.getElementById("sort-select").addEventListener("change", (e) => {
     if (state.sort === e.target.value) state.sortDir *= -1;
     else { state.sort = e.target.value; state.sortDir = 1; }
