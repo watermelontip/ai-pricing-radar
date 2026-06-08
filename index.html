@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 模型价格雷达 — 一页看清所有AI模型价格</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #58a6ff;
+  --accent-hover: #79c0ff;
+  --green: #3fb950;
+  --orange: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+  --pink: #f778ba;
+  --gold: #e3b341;
+  --silver: #8b949e;
+  --bronze: #a3714f;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+header {
+  text-align: center;
+  padding: 40px 0 30px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+header h1 { font-size: 2em; margin-bottom: 8px; }
+header h1 span { color: var(--accent); }
+header p { color: var(--text-secondary); font-size: 1.1em; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+.badge-provider { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+.badge-feature { background: rgba(88,166,255,0.15); color: var(--accent); }
+.badge-cheap { background: rgba(63,185,80,0.15); color: var(--green); }
+.badge-new { background: rgba(188,140,255,0.15); color: var(--purple); }
+
+/* 筛选栏 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.filter-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+/* 排序 */
+.sort-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sort-row label { color: var(--text-secondary); font-size: 0.9em; }
+.sort-select {
+  background: var(--bg-secondary);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  font-size: 0.9em;
+}
+
+/* 表格 */
+.table-wrap { overflow-x: auto; margin-bottom: 40px; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+thead { background: var(--bg-tertiary); }
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+th:hover { color: var(--text); }
+th .sort-icon { margin-left: 4px; font-size: 0.8em; }
+td { padding: 10px 16px; border-top: 1px solid var(--border); }
+tr:hover { background: rgba(88,166,255,0.04); }
+.model-name { font-weight: 600; color: var(--text); }
+.model-notes { color: var(--text-muted); font-size: 0.85em; margin-top: 2px; }
+.price { font-family: "SF Mono", "Fira Code", monospace; }
+.price-input { color: var(--green); }
+.price-output { color: var(--orange); }
+.context-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.star-btn:hover, .star-btn.starred { color: var(--gold); }
+
+/* 计算器 */
+.calculator {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 40px;
+}
+.calculator h2 { margin-bottom: 20px; font-size: 1.3em; }
+.calc-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.calc-group label { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 8px; }
+.calc-group input[type="range"] { width: 100%; accent-color: var(--accent); }
+.calc-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+.calc-number {
+  font-family: monospace;
+  font-size: 1.1em;
+  color: var(--accent);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  width: 100px;
+  text-align: center;
+}
+.calc-unit { color: var(--text-muted); font-size: 0.85em; }
+
+/* 结果 */
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.result-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.result-card:hover { border-color: var(--accent); }
+.result-card.top1 { border-color: var(--gold); }
+.result-card.top2 { border-color: var(--silver); }
+.result-card.top3 { border-color: var(--bronze); }
+.result-rank { font-size: 1.5em; margin-bottom: 4px; }
+.result-model { font-weight: 600; margin-bottom: 2px; }
+.result-provider { color: var(--text-muted); font-size: 0.85em; margin-bottom: 8px; }
+.result-price { font-family: monospace; font-size: 1.4em; font-weight: 700; }
+.result-price.top1 { color: var(--gold); }
+.result-price.top2 { color: var(--silver); }
+.result-price.top3 { color: var(--bronze); }
+.result-breakdown { color: var(--text-muted); font-size: 0.8em; margin-top: 4px; }
+
+/* 场景推荐 */
+.scenarios { margin-bottom: 40px; }
+.scenarios h2 { margin-bottom: 16px; font-size: 1.3em; }
+.scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.scenario-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.scenario-card.active { border-color: var(--accent); background: rgba(88,166,255,0.08); }
+.scenario-icon { font-size: 2em; margin-bottom: 8px; }
+.scenario-name { font-weight: 600; margin-bottom: 4px; }
+.scenario-desc { color: var(--text-muted); font-size: 0.85em; }
+
+/* 对比模式 */
+.compare-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+.compare-bar.visible { transform: translateY(0); }
+.compare-models { display: flex; gap: 12px; align-items: center; }
+.compare-tag {
+  background: rgba(88,166,255,0.15);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.9em;
+}
+.compare-btn {
+  padding: 8px 20px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* 底部 */
+footer {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  border-top: 1px solid var(--border);
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* 移动端 */
+@media (max-width: 768px) {
+  .container { padding: 12px; }
+  header { padding: 20px 0; }
+  header h1 { font-size: 1.4em; }
+  .calc-inputs { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: 0.85em; }
+  th, td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>📡 <span>AI 模型价格雷达</span></h1>
+    <p>一页看清所有AI模型价格 · 输入用量即算月费 · 选最划算的模型</p>
+  </header>
+
+  <!-- 筛选栏 -->
+  <div class="filters" id="filters"></div>
+
+  <!-- 排序 -->
+  <div class="sort-row">
+    <label>共 <span id="model-count">0</span> 个模型</label>
+    <select class="sort-select" id="sort-select">
+      <option value="inputPrice">按输入价格排序</option>
+      <option value="outputPrice">按输出价格排序</option>
+      <option value="contextWindow">按上下文窗口排序</option>
+      <option value="name">按名称排序</option>
+      <option value="provider">按厂商排序</option>
+    </select>
+  </div>
+
+  <!-- 价格表 -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>⭐</th>
+          <th data-sort="name">模型 <span class="sort-icon">↕</span></th>
+          <th data-sort="provider">厂商 <span class="sort-icon">↕</span></th>
+          <th data-sort="inputPrice">输入价格 <span class="sort-icon">↕</span></th>
+          <th data-sort="outputPrice">输出价格 <span class="sort-icon">↕</span></th>
+          <th data-sort="contextWindow">上下文 <span class="sort-icon">↕</span></th>
+          <th>特性</th>
+        </tr>
+      </thead>
+      <tbody id="model-table"></tbody>
+    </table>
+  </div>
+
+  <!-- 月费计算器 -->
+  <div class="calculator">
+    <h2>💰 月费计算器</h2>
+    <div class="calc-inputs">
+      <div class="calc-group">
+        <label>每月输入 Tokens</label>
+        <input type="range" id="input-tokens" min="0" max="10000000" value="500000" step="10000">
+        <div class="calc-value">
+          <input type="text" class="calc-number" id="input-tokens-num" value="500K">
+          <span class="calc-unit">tokens/月</span>
+        </div>
+      </div>
+      <div class="calc-group">
+        <label>每月输出 Tokens</label>
+        <input type="range" id="output-tokens" min="0" max="10000000" value="200000" step="10000">
+        <div class="calc-value">
+          <input type="text" class="calc-number" id="output-tokens-num" value="200K">
+          <span class="calc-unit">tokens/月</span>
+        </div>
+      </div>
+    </div>
+    <h3 style="color:var(--text-secondary);margin-bottom:12px;font-size:0.95em;">🏆 最便宜 TOP 6</h3>
+    <div class="results-grid" id="calc-results"></div>
+  </div>
+
+  <!-- 场景推荐 -->
+  <div class="scenarios">
+    <h2>🎯 场景推荐</h2>
+    <div class="scenario-grid" id="scenarios"></div>
+    <div id="scenario-result" style="margin-top:16px;"></div>
+  </div>
+
+  <footer>
+    <p>数据更新于 2026-06-08 · 价格来源: 各厂商官网 · 价格可能随时变动，请以官方为准</p>
+    <p style="margin-top:8px;">Made with ❤️ by <a href="https://github.com/watermelontip">Ren Echo</a></p>
+  </footer>
+</div>
+
+<script>
+// ============ 模型数据 ============
+const MODELS = [
+  // OpenAI
+  { id:"gpt-4o", name:"GPT-4o", provider:"OpenAI", inputPrice:2.5, outputPrice:10, contextWindow:128000, features:["vision","tools","json"], category:["general","code","vision"], released:"2024-05", notes:"旗舰模型，综合能力最强" },
+  { id:"gpt-4o-mini", name:"GPT-4o mini", provider:"OpenAI", inputPrice:0.15, outputPrice:0.6, contextWindow:128000, features:["vision","tools","json"], category:["general","code","vision","cheap"], released:"2024-07", notes:"轻量旗舰，性价比极高" },
+  { id:"gpt-4.1", name:"GPT-4.1", provider:"OpenAI", inputPrice:2, outputPrice:8, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","long"], released:"2025-04", notes:"百万上下文，代码能力提升" },
+  { id:"gpt-4.1-mini", name:"GPT-4.1 mini", provider:"OpenAI", inputPrice:0.4, outputPrice:1.6, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","long","cheap"], released:"2025-04", notes:"4.1轻量版，百万上下文" },
+  { id:"o3", name:"o3", provider:"OpenAI", inputPrice:10, outputPrice:40, contextWindow:200000, features:["reasoning","tools"], category:["reasoning","code"], released:"2025-04", notes:"强推理模型，数学/编程顶级" },
+  { id:"o4-mini", name:"o4-mini", provider:"OpenAI", inputPrice:1.1, outputPrice:4.4, contextWindow:200000, features:["reasoning","tools"], category:["reasoning","code","cheap"], released:"2025-04", notes:"轻量推理模型，性价比推理" },
+  // Anthropic
+  { id:"claude-sonnet-4", name:"Claude Sonnet 4", provider:"Anthropic", inputPrice:3, outputPrice:15, contextWindow:200000, features:["vision","tools","json"], category:["general","code","long"], released:"2025-05", notes:"最新旗舰，代码能力顶尖" },
+  { id:"claude-haiku-3.5", name:"Claude 3.5 Haiku", provider:"Anthropic", inputPrice:0.8, outputPrice:4, contextWindow:200000, features:["vision","tools"], category:["general","code","cheap"], released:"2024-11", notes:"快速轻量，日常对话首选" },
+  { id:"claude-opus-4", name:"Claude Opus 4", provider:"Anthropic", inputPrice:15, outputPrice:75, contextWindow:200000, features:["vision","tools","json"], category:["reasoning","code"], released:"2025-06", notes:"最强推理，复杂任务专用" },
+  // Google
+  { id:"gemini-2.5-pro", name:"Gemini 2.5 Pro", provider:"Google", inputPrice:1.25, outputPrice:10, contextWindow:1048576, features:["vision","tools","json"], category:["general","code","vision","long"], released:"2025-03", notes:"百万上下文，多模态强" },
+  { id:"gemini-2.5-flash", name:"Gemini 2.5 Flash", provider:"Google", inputPrice:0.15, outputPrice:0.6, contextWindow:1048576, features:["vision","tools"], category:["general","code","vision","long","cheap"], released:"2025-03", notes:"超快超便宜，百万上下文" },
+  // DeepSeek
+  { id:"deepseek-v3", name:"DeepSeek V3", provider:"DeepSeek", inputPrice:0.27, outputPrice:1.1, contextWindow:128000, features:["tools","json"], category:["general","code","cheap"], released:"2024-12", notes:"国产之王，性价比碾压" },
+  { id:"deepseek-r1", name:"DeepSeek R1", provider:"DeepSeek", inputPrice:0.55, outputPrice:2.19, contextWindow:128000, features:["reasoning"], category:["reasoning","code","cheap"], released:"2025-01", notes:"开源推理模型，价格杀手" },
+  // 阿里
+  { id:"qwen3-235b", name:"Qwen3 235B", provider:"阿里", inputPrice:0.4, outputPrice:1.6, contextWindow:131072, features:["tools","json"], category:["general","code","cheap"], released:"2025-04", notes:"开源旗舰，中文能力一流" },
+  { id:"qwen3-32b", name:"Qwen3 32B", provider:"阿里", inputPrice:0.1, outputPrice:0.4, contextWindow:131072, features:["tools"], category:["general","code","cheap"], released:"2025-04", notes:"轻量开源，极致性价比" },
+  // Mistral
+  { id:"mistral-large", name:"Mistral Large", provider:"Mistral", inputPrice:2, outputPrice:6, contextWindow:128000, features:["tools","json"], category:["general","code"], released:"2024-11", notes:"欧洲最强，多语言优秀" },
+  { id:"mistral-small", name:"Mistral Small", provider:"Mistral", inputPrice:0.1, outputPrice:0.3, contextWindow:128000, features:["tools"], category:["general","code","cheap"], released:"2025-01", notes:"轻量快速，价格极低" },
+  // Meta (通过API提供商)
+  { id:"llama-4-maverick", name:"Llama 4 Maverick", provider:"Meta", inputPrice:0.2, outputPrice:0.6, contextWindow:1048576, features:["vision","tools"], category:["general","code","vision","long","cheap"], released:"2025-04", notes:"开源多模态，百万上下文" },
+  { id:"llama-4-scout", name:"Llama 4 Scout", provider:"Meta", inputPrice:0.1, outputPrice:0.3, contextWindow:524288, features:["vision"], category:["general","vision","cheap"], released:"2025-04", notes:"超轻量开源，快速推理" },
+];
+
+// ============ 场景数据 ============
+const SCENARIOS = [
+  { id:"chat", name:"日常对话", icon:"💬", desc:"闲聊/问答/翻译", inputTokens:200000, outputTokens:100000 },
+  { id:"code", name:"代码生成", icon:"💻", desc:"写代码/Debug/Review", inputTokens:1000000, outputTokens:500000 },
+  { id:"docs", name:"长文档分析", icon:"📄", desc:"论文/报告/合同", inputTokens:3000000, outputTokens:300000 },
+  { id:"vision", name:"图片理解", icon:"🖼️", desc:"图片描述/OCR/分析", inputTokens:500000, outputTokens:100000 },
+  { id:"batch", name:"批量处理", icon:"⚡", desc:"数据清洗/分类/提取", inputTokens:5000000, outputTokens:2000000 },
+  { id:"reason", name:"复杂推理", icon:"🧠", desc:"数学/逻辑/规划", inputTokens:500000, outputTokens:300000 },
+];
+
+// ============ 状态 ============
+let state = {
+  filter: "all",
+  sort: "inputPrice",
+  sortDir: 1,
+  starred: JSON.parse(localStorage.getItem("starred") || "[]"),
+  inputTokens: 500000,
+  outputTokens: 200000,
+  compareList: [],
+};
+
+// ============ 工具函数 ============
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+"M";
+  if (n >= 1000) return (n/1000).toFixed(0)+"K";
+  return n.toString();
+}
+function fmtPrice(n) {
+  if (n < 0.01) return "$"+n.toFixed(3);
+  if (n < 1) return "$"+n.toFixed(2);
+  if (n < 100) return "$"+n.toFixed(1);
+  return "$"+n.toFixed(0);
+}
+function monthlyCost(model, inTok, outTok) {
+  return (model.inputPrice * inTok / 1000000) + (model.outputPrice * outTok / 1000000);
+}
+
+// ============ 渲染筛选栏 ============
+function renderFilters() {
+  const cats = [
+    { id:"all", label:"全部" },
+    { id:"cheap", label:"💰 最便宜" },
+    { id:"code", label:"💻 代码" },
+    { id:"vision", label:"👁️ 视觉" },
+    { id:"long", label:"📚 长上下文" },
+    { id:"reasoning", label:"🧠 推理" },
+  ];
+  const providers = [...new Set(MODELS.map(m=>m.provider))];
+  const html = cats.map(c =>
+    `<button class="filter-btn ${state.filter===c.id?'active':''}" data-filter="${c.id}">${c.label}</button>`
+  ).join("") + `<span style="margin-left:8px;color:var(--text-muted)">|</span>` +
+  providers.map(p =>
+    `<button class="filter-btn ${state.filter===('p:'+p)?'active':''}" data-filter="p:${p}">${p}</button>`
+  ).join("");
+  document.getElementById("filters").innerHTML = html;
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => { state.filter = btn.dataset.filter; render(); });
+  });
+}
+
+// ============ 渲染表格 ============
+function renderTable() {
+  let models = [...MODELS];
+  // 筛选
+  if (state.filter === "cheap") models = models.filter(m => m.category.includes("cheap"));
+  else if (state.filter === "code") models = models.filter(m => m.category.includes("code"));
+  else if (state.filter === "vision") models = models.filter(m => m.category.includes("vision"));
+  else if (state.filter === "long") models = models.filter(m => m.category.includes("long"));
+  else if (state.filter === "reasoning") models = models.filter(m => m.category.includes("reasoning"));
+  else if (state.filter.startsWith("p:")) models = models.filter(m => m.provider === state.filter.slice(2));
+  // 排序
+  const s = state.sort;
+  const d = state.sortDir;
+  models.sort((a,b) => {
+    if (s === "name" || s === "provider") return d * a[s].localeCompare(b[s]);
+    return d * (a[s] - b[s]);
+  });
+  // 渲染
+  document.getElementById("model-count").textContent = models.length;
+  const tbody = document.getElementById("model-table");
+  tbody.innerHTML = models.map(m => {
+    const starred = state.starred.includes(m.id);
+    const features = m.features.map(f => {
+      const labels = {vision:"👁️视觉",tools:"🔧工具",json:"📋JSON",reasoning:"🧠推理"};
+      return `<span class="badge badge-feature">${labels[f]||f}</span>`;
+    }).join(" ");
+    return `<tr>
+      <td><button class="star-btn ${starred?'starred':''}" data-id="${m.id}">${starred?'★':'☆'}</button></td>
+      <td>
+        <div class="model-name">${m.name}</div>
+        <div class="model-notes">${m.notes}</div>
+      </td>
+      <td><span class="badge badge-provider">${m.provider}</span></td>
+      <td class="price price-input">${fmtPrice(m.inputPrice)}/1M</td>
+      <td class="price price-output">${fmtPrice(m.outputPrice)}/1M</td>
+      <td><span class="context-badge">${fmt(m.contextWindow)}</span></td>
+      <td>${features}</td>
+    </tr>`;
+  }).join("");
+  // 星标事件
+  tbody.querySelectorAll(".star-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      if (state.starred.includes(id)) state.starred = state.starred.filter(s=>s!==id);
+      else state.starred.push(id);
+      localStorage.setItem("starred", JSON.stringify(state.starred));
+      render();
+    });
+  });
+}
+
+// ============ 渲染计算器 ============
+function renderCalc() {
+  const inTok = state.inputTokens;
+  const outTok = state.outputTokens;
+  // 计算所有模型月费
+  const costs = MODELS.map(m => ({
+    ...m,
+    monthly: monthlyCost(m, inTok, outTok),
+    inputCost: m.inputPrice * inTok / 1000000,
+    outputCost: m.outputPrice * outTok / 1000000,
+  })).sort((a,b) => a.monthly - b.monthly).slice(0, 6);
+  const ranks = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣"];
+  const grid = document.getElementById("calc-results");
+  grid.innerHTML = costs.map((c, i) => {
+    const cls = i===0?"top1":i===1?"top2":i===2?"top3":"";
+    return `<div class="result-card ${cls}">
+      <div class="result-rank">${ranks[i]}</div>
+      <div class="result-model">${c.name}</div>
+      <div class="result-provider">${c.provider}</div>
+      <div class="result-price ${cls}">${fmtPrice(c.monthly)}/月</div>
+      <div class="result-breakdown">输入 ${fmtPrice(c.inputCost)} + 输出 ${fmtPrice(c.outputCost)}</div>
+    </div>`;
+  }).join("");
+}
+
+// ============ 渲染场景 ============
+function renderScenarios() {
+  const grid = document.getElementById("scenarios");
+  grid.innerHTML = SCENARIOS.map(s =>
+    `<div class="scenario-card" data-id="${s.id}">
+      <div class="scenario-icon">${s.icon}</div>
+      <div class="scenario-name">${s.name}</div>
+      <div class="scenario-desc">${s.desc}</div>
+    </div>`
+  ).join("");
+  grid.querySelectorAll(".scenario-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const sc = SCENARIOS.find(s=>s.id===card.dataset.id);
+      if (!sc) return;
+      // 更新滑块
+      state.inputTokens = sc.inputTokens;
+      state.outputTokens = sc.outputTokens;
+      document.getElementById("input-tokens").value = sc.inputTokens;
+      document.getElementById("output-tokens").value = sc.outputTokens;
+      document.getElementById("input-tokens-num").value = fmt(sc.inputTokens);
+      document.getElementById("output-tokens-num").value = fmt(sc.outputTokens);
+      // 高亮
+      grid.querySelectorAll(".scenario-card").forEach(c=>c.classList.remove("active"));
+      card.classList.add("active");
+      // 显示推荐
+      const costs = MODELS.map(m => ({...m, monthly: monthlyCost(m, sc.inputTokens, sc.outputTokens)}))
+        .sort((a,b)=>a.monthly-b.monthly);
+      const cheapest = costs[0];
+      const best = costs.filter(m=>m.category.includes(sc.id==="vision"?"vision":"code")).sort((a,b)=>a.monthly-b.monthly)[0] || cheapest;
+      document.getElementById("scenario-result").innerHTML = `
+        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <p style="color:var(--text-secondary);margin-bottom:8px;">
+            <strong style="color:var(--text);">${sc.icon} ${sc.name}</strong> 场景推荐：
+            输入 ${fmt(sc.inputTokens)} tokens + 输出 ${fmt(sc.outputTokens)} tokens
+          </p>
+          <p>💰 <strong style="color:var(--green);">性价比之王</strong>: ${cheapest.name} (${cheapest.provider}) — <span style="color:var(--gold);font-weight:700;">${fmtPrice(cheapest.monthly)}/月</span></p>
+          ${best.id!==cheapest.id ? `<p>⭐ <strong style="color:var(--accent);">该场景最优</strong>: ${best.name} (${best.provider}) — <span style="color:var(--accent);font-weight:700;">${fmtPrice(best.monthly)}/月</span></p>` : ""}
+        </div>`;
+      renderCalc();
+    });
+  });
+}
+
+// ============ 主渲染 ============
+function render() {
+  renderFilters();
+  renderTable();
+  renderCalc();
+}
+
+// ============ 事件绑定 ============
+function init() {
+  // 滑块
+  const inSlider = document.getElementById("input-tokens");
+  const outSlider = document.getElementById("output-tokens");
+  const inNum = document.getElementById("input-tokens-num");
+  const outNum = document.getElementById("output-tokens-num");
+  inSlider.addEventListener("input", () => {
+    state.inputTokens = +inSlider.value;
+    inNum.value = fmt(state.inputTokens);
+    renderCalc();
+  });
+  outSlider.addEventListener("input", () => {
+    state.outputTokens = +outSlider.value;
+    outNum.value = fmt(state.outputTokens);
+    renderCalc();
+  });
+  inNum.addEventListener("change", () => {
+    const v = parseInt(inNum.value.replace(/[KMkm]/g, "")) * (inNum.value.toUpperCase().includes("M")?1000000:inNum.value.toUpperCase().includes("K")?1000:1);
+    if (!isNaN(v)) { state.inputTokens = v; inSlider.value = v; renderCalc(); }
+  });
+  outNum.addEventListener("change", () => {
+    const v = parseInt(outNum.value.replace(/[KMkm]/g, "")) * (outNum.value.toUpperCase().includes("M")?1000000:outNum.value.toUpperCase().includes("K")?1000:1);
+    if (!isNaN(v)) { state.outputTokens = v; outSlider.value = v; renderCalc(); }
+  });
+  // 排序
+  document.getElementById("sort-select").addEventListener("change", (e) => {
+    if (state.sort === e.target.value) state.sortDir *= -1;
+    else { state.sort = e.target.value; state.sortDir = 1; }
+    render();
+  });
+  document.querySelectorAll("th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sort;
+      if (state.sort === key) state.sortDir *= -1;
+      else { state.sort = key; state.sortDir = 1; }
+      document.getElementById("sort-select").value = key;
+      render();
+    });
+  });
+  render();
+  renderScenarios();
+}
+
+init();
+</script>
+</body>
+</html>
